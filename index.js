@@ -18,11 +18,33 @@ async function run(){
         await client.connect()
         const productCollection = client.db('warehouse').collection('product')
 
-        app.get('/stock', async (req, res) =>{
+        app.get('/stockAllPd', async (req, res) =>{
             const query = {}
             const cursor = productCollection.find(query)
             const service = await cursor.toArray()
             res.send(service)
+        })
+
+        app.get('/pagesPd',async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+
+            const query = {};
+            const cursor = productCollection.find(query);
+            let products;
+            if(page || size){
+
+                products = await cursor.skip(page*size).limit(size).toArray()
+            }else{
+                products = await cursor.toArray()
+            }
+            
+            res.send(products)
+        })
+
+        app.get('/allPdCount', async (req, res) => {
+            const count = await productCollection.estimatedDocumentCount()
+            res.send({count})
         })
 
 

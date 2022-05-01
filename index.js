@@ -66,14 +66,19 @@ async function run(){
             const result = await productCollection.updateOne(filter, updateDoc, options)
             res.send(result)
         })
-
+        // add product 
         app.post('/stock', async (req, res) => {
             const newProduct = req.body
             console.log('adding new product', newProduct )
             const result = await productCollection.insertOne(newProduct)
             res.send(result)
         })
-
+        app.delete('/stock/:id', async (req, res)=>{
+            const id = req.params.id
+            const query = {_id : ObjectId(id)}
+            const result = await productCollection.deleteOne(query)
+            res.send(result)
+        })
     }
     finally{
 

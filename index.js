@@ -11,7 +11,7 @@ require('dotenv').config();
 app.use(cors());
 app.use(express.json());
 
-// jwt token
+// jwt token access
 function JWTAccess(req, res, next) {
     const headerAuth = req.headers.authorization
     if(!headerAuth){

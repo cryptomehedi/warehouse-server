@@ -8,8 +8,8 @@ require('dotenv').config();
 
 
 // mid ware
-// app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
 // jwt token access
 function JWTAccess(req, res, next) {
@@ -61,7 +61,6 @@ async function run(){
         // Auth api token 
         app.post('/user', async (req, res)=>{
             const user = req.body
-            console.log(user);
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_JWT, {
                 expiresIn: '7d'
             })

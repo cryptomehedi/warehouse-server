@@ -8,7 +8,7 @@ require('dotenv').config();
 
 
 // mid ware
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // jwt token access
@@ -61,6 +61,7 @@ async function run(){
         // Auth api token 
         app.post('/user', async (req, res)=>{
             const user = req.body
+            console.log(user);
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_JWT, {
                 expiresIn: '7d'
             })
@@ -115,7 +116,6 @@ async function run(){
         // add product 
         app.post('/stock',JWTAccess, async (req, res) => {
             const email=  req.body.userInfo
-            console.log(email)
             const decodedEmail = req.decoded.email
             if(email === decodedEmail){
                 const newProduct = req.body.allPdInfo

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 4000
 require('dotenv').config();
@@ -9,6 +10,23 @@ require('dotenv').config();
 // mid ware
 app.use(cors());
 app.use(express.json());
+
+// jwt token
+function JWTAccess(req, res, next) {
+    const headerAuth = req.headers.authorization
+    if(!headerAuth){
+        return res.status(401).send({message: 'Invalid authorization'})
+    }
+    const token = headerAuth.split(' ')[1]
+    jwt.verify(token,process.env.ACCESS_TOKEN_JWT, (err,decoded) => {
+        if(err) return res.status(403).send({message: 'forbidden access'})
+        
+        req.decoded = decoded
+        // console.log(decoded)
+        next()
+    })
+    
+}
 
 // mongodb connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.mkpap.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -41,13 +59,21 @@ async function run(){
             
             res.send(products)
         })
+        // Auth api token 
+        app.post('/user', async (req, res)=>{
+            const user = req.body
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_JWT, {
+                expiresIn: '1d'
+            })
+            res.send({accessToken})
+        })
 
         app.get('/allPdCount', async (req, res) => {
             const count = await productCollection.estimatedDocumentCount()
             res.send({count})
         })
 
-        app.get('/stock/:id', async (req, res) =>{
+        app.get('/stock/:id', JWTAccess, async (req, res) =>{
             const id = req.params.id
             const query = {_id: ObjectId(id)}
             const service = await productCollection.findOne(query)
@@ -73,7 +99,7 @@ async function run(){
             const result = await productCollection.insertOne(newProduct)
             res.send(result)
         })
-        app.delete('/stock/:id', async (req, res)=>{
+        app.delete('/stock/:id',JWT, async (req, res)=>{
             const id = req.params.id
             const query = {_id : ObjectId(id)}
             const result = await productCollection.deleteOne(query)

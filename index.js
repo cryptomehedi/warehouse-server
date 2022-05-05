@@ -14,7 +14,6 @@ app.use(express.json());
 // jwt token
 function JWTAccess(req, res, next) {
     const headerAuth = req.headers.authorization
-    console.log(headerAuth);
     if(!headerAuth){
         return res.status(401).send({message: 'Invalid authorization'})
     }
@@ -23,7 +22,6 @@ function JWTAccess(req, res, next) {
         if(err) return res.status(403).send({message: 'forbidden access'})
         
         req.decoded = decoded
-        // console.log(decoded)
         next()
     })
     
@@ -64,7 +62,7 @@ async function run(){
         app.post('/user', async (req, res)=>{
             const user = req.body
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_JWT, {
-                expiresIn: '1d'
+                expiresIn: '7d'
             })
             res.send({accessToken})
         })
@@ -74,31 +72,59 @@ async function run(){
             res.send({count})
         })
 
-        app.get('/stock/:id', JWTAccess, async (req, res) =>{
+        app.get('/stock/:id', async (req, res) =>{
             const id = req.params.id
             const query = {_id: ObjectId(id)}
             const service = await productCollection.findOne(query)
             res.send(service)
         })
 
-        // update product
-        app.put('/stock/:id', async (req, res) => {
-            const id = req.params.id
-            const filter = {_id : ObjectId(id)}
-            const updatedPD = req.body
-            const options = { upsert: true };
-            const updateDoc = {
-                $set: updatedPD
+        app.get('/userAdd', JWTAccess, async (req, res)=>{
+            const decodedEmail = req.decoded.email
+            const email = req.query.email
+            if(email === decodedEmail){
+                const query = {userInfo: email}
+                const cursor = productCollection.find(query)
+                const product = await cursor.toArray()
+                res.send(product)
             }
-            const result = await productCollection.updateOne(filter, updateDoc, options)
-            res.send(result)
+            else{
+                res.status(403).send({message: 'forbidden access'})
+            }
+        })
+
+        // update product
+        app.put('/stock/:id',JWTAccess, async (req, res) => {
+                const email=  req.body.userInfo
+                const decodedEmail = req.decoded.email
+                if(email === decodedEmail){
+                    const id = req.params.id
+                    const filter = {_id : ObjectId(id)}
+                    const updatedPD = req.body.delivery
+                    const options = { upsert: true };
+                    const updateDoc = {
+                        $set: updatedPD
+                    }
+                    const result = await productCollection.updateOne(filter, updateDoc, options)
+                    res.send(result)
+                }else{
+                    res.status(403).send({message: 'forbidden access'})
+                }
+                
         })
         // add product 
-        app.post('/stock', async (req, res) => {
-            const newProduct = req.body
-            console.log('adding new product', newProduct )
-            const result = await productCollection.insertOne(newProduct)
-            res.send(result)
+        app.post('/stock',JWTAccess, async (req, res) => {
+            const email=  req.body.userInfo
+            console.log(email)
+            const decodedEmail = req.decoded.email
+            if(email === decodedEmail){
+                const newProduct = req.body.allPdInfo
+                console.log('adding new product', newProduct )
+                const result = await productCollection.insertOne(newProduct)
+                res.send(result)
+            }else{
+                res.status(403).send({message: 'forbidden access'})
+            }
         })
         app.delete('/stock/:id', async (req, res)=>{
             const id = req.params.id

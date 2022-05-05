@@ -14,6 +14,7 @@ app.use(express.json());
 // jwt token
 function JWTAccess(req, res, next) {
     const headerAuth = req.headers.authorization
+    console.log(headerAuth);
     if(!headerAuth){
         return res.status(401).send({message: 'Invalid authorization'})
     }
@@ -99,7 +100,7 @@ async function run(){
             const result = await productCollection.insertOne(newProduct)
             res.send(result)
         })
-        app.delete('/stock/:id',JWT, async (req, res)=>{
+        app.delete('/stock/:id', async (req, res)=>{
             const id = req.params.id
             const query = {_id : ObjectId(id)}
             const result = await productCollection.deleteOne(query)

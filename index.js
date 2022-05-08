@@ -133,7 +133,7 @@ async function run(){
         })
     }
     finally{
-
+        
     }
 }
 run().catch(console.dir)
@@ -144,4 +144,6 @@ app.get('/', (req, res) => {
     res.send('Server running Successfully')
 })
 
-app.listen(port)
+app.listen(port, ()=> {
+    console.log(port);
+})
